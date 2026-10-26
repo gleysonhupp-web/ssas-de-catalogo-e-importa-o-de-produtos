@@ -31,6 +31,7 @@ model Account {
 
   users        User[]
   stores       Store[]
+  cartItems    CartItem[]
   orders       Order[]
   creditLedger CreditLedgerEntry[]
 }
@@ -135,6 +136,7 @@ model CatalogProduct {
   media       MediaAsset[]
   orderItems  OrderItem[]
   importItems ImportItem[]
+  cartItems   CartItem[]
 
   @@index([categoryId, status])
 }
@@ -164,6 +166,20 @@ model MediaAsset {
   product CatalogProduct @relation(fields: [catalogProductId], references: [id], onDelete: Cascade)
 
   @@index([catalogProductId, position])
+}
+
+// ---------- Carrinho ----------
+
+// Seleção em andamento; vira lista imutável (OrderItem) no checkout.
+model CartItem {
+  accountId        String
+  catalogProductId String
+  addedAt          DateTime @default(now())
+
+  account Account        @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  product CatalogProduct @relation(fields: [catalogProductId], references: [id])
+
+  @@id([accountId, catalogProductId])
 }
 
 // ---------- Pedidos e pagamentos ----------

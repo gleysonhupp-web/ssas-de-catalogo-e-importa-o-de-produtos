@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist } from "next/font/google";
 import { currentUser, isStaff } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { logout } from "@/app/(auth)/actions";
 import "./globals.css";
 
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const user = await currentUser();
+  const cartCount = user ? await prisma.cartItem.count({ where: { accountId: user.accountId } }) : 0;
 
   return (
     <html lang="pt-BR">
@@ -23,6 +25,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <nav>
               <Link href="/" className="brand">Catálogo Pronto</Link>
               <Link href="/catalogo">Catálogo</Link>
+              {user && <Link href="/carrinho">Carrinho ({cartCount})</Link>}
               {user && isStaff(user.role) && <Link href="/admin">Admin</Link>}
               {user ? (
                 <form action={logout}>
