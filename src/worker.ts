@@ -2,6 +2,7 @@
 // Consome a fila respeitando o limite da Nuvemshop e varre itens esquecidos
 // (por exemplo, se o Redis foi reiniciado) para nunca deixar um item pago parado.
 
+import http from "node:http";
 import { Worker } from "bullmq";
 import { prisma } from "@/lib/db";
 import { processImportItem, RetryableImportError } from "@/lib/importer";
@@ -59,7 +60,25 @@ async function sweep() {
 void sweep();
 const timer = setInterval(() => void sweep().catch((e) => console.error("varredura", e)), SWEEP_EVERY_MS);
 
+// No plano gratuito do Render o worker roda como Web Service: esta rota de saúde mantém o
+// serviço acordado (o UptimeRobot a consulta a cada 5 minutos) e mostra o tamanho da fila.
+const server = process.env.PORT
+  ? http
+      .createServer(async (_req, res) => {
+        try {
+          const counts = await importQueue().getJobCounts("waiting", "active", "delayed", "failed");
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ ok: true, fila: counts }));
+        } catch {
+          res.writeHead(503, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ ok: false }));
+        }
+      })
+      .listen(Number(process.env.PORT))
+  : null;
+
 async function shutdown() {
+  server?.close();
   clearInterval(timer);
   await worker.close();
   await prisma.$disconnect();
