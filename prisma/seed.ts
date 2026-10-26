@@ -1,6 +1,7 @@
 // Lote-piloto de demonstração: nicho Beleza > Maquiagem, dados fictícios.
 // As imagens são placeholders sem marca; substituir por fotos licenciadas antes de vender.
 import { PrismaClient } from "@prisma/client";
+import { hashPassword } from "../src/lib/password";
 
 const prisma = new PrismaClient();
 
@@ -69,6 +70,23 @@ async function main() {
     }
   }
   console.log(`Catálogo de demonstração com ${n} produtos.`);
+
+  // Primeiro administrador: ADMIN_EMAIL=... ADMIN_PASSWORD=... npm run db:seed
+  const { ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
+  if (ADMIN_EMAIL && ADMIN_PASSWORD) {
+    const email = ADMIN_EMAIL.toLowerCase();
+    if (!(await prisma.user.findUnique({ where: { email } }))) {
+      await prisma.user.create({
+        data: {
+          email,
+          role: "ADMIN",
+          passwordHash: await hashPassword(ADMIN_PASSWORD),
+          account: { create: { name: "Administração", termsAcceptedAt: new Date() } },
+        },
+      });
+      console.log(`Administrador ${email} criado.`);
+    }
+  }
 }
 
 main()

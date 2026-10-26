@@ -10,7 +10,7 @@ cp .env.example .env            # gere TOKEN_ENCRYPTION_KEY com: openssl rand -b
 docker compose up -d            # Postgres e Redis
 npm install
 npm run db:migrate              # cria as tabelas
-npm run db:seed                 # catálogo de demonstração (20 produtos fictícios)
+ADMIN_EMAIL=voce@exemplo.com ADMIN_PASSWORD=troque-esta-senha npm run db:seed   # catálogo demo + 1º admin
 npm run dev                     # http://localhost:3000
 npm test                        # testes de preço, créditos e criptografia
 ```
