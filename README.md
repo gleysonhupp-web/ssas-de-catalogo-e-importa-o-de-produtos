@@ -25,8 +25,19 @@ npm test                        # testes de preço, créditos e criptografia
 ## Roadmap do MVP
 
 1. Base do projeto ✅
-2. Catálogo e painel administrativo
-3. Vitrine, busca e carrinho do lojista
-4. Conexão Nuvemshop (OAuth)
+2. Catálogo e painel administrativo ✅
+3. Vitrine, busca e carrinho do lojista ✅
+4. Conexão Nuvemshop (OAuth) ✅
 5. Pagamento Pix/cartão e livro-razão de créditos
 6. Motor de importação com fila, idempotência e reprocessamento
+
+## Testando sem uma loja real
+
+`scripts/mock-nuvemshop.mjs` imita o OAuth e a API de produtos da Nuvemshop (incluindo limite 429, erro 422 e resposta perdida).
+
+```bash
+APP_URL=http://localhost:3000 node scripts/mock-nuvemshop.mjs
+# no .env:
+# NUVEMSHOP_AUTH_BASE="http://localhost:4010"  NUVEMSHOP_API_BASE="http://localhost:4010"
+# NUVEMSHOP_CLIENT_ID="123"  NUVEMSHOP_CLIENT_SECRET="segredo"
+```

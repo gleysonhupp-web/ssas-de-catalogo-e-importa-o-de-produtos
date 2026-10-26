@@ -25,6 +25,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <nav>
               <Link href="/" className="brand">Catálogo Pronto</Link>
               <Link href="/catalogo">Catálogo</Link>
+              {user && <Link href="/lojas">Minha loja</Link>}
               {user && <Link href="/carrinho">Carrinho ({cartCount})</Link>}
               {user && isStaff(user.role) && <Link href="/admin">Admin</Link>}
               {user ? (
