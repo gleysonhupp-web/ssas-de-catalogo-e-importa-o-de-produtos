@@ -70,7 +70,7 @@ async function pickup() {
   for (const item of items) await enqueueItems([item.id], item.retryRound);
 }
 
-void sweep();
+void sweep().catch((e) => console.error("varredura", e));
 const timer = setInterval(() => void sweep().catch((e) => console.error("varredura", e)), SWEEP_EVERY_MS);
 let picking = false;
 const pickupTimer = setInterval(() => {
