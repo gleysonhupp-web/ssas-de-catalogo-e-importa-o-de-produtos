@@ -8,6 +8,7 @@ import { prisma } from "@/lib/db";
 import { processImportItem, RetryableImportError } from "@/lib/importer";
 import { enqueueItems, IMPORT_QUEUE, importQueue, redisConnection } from "@/lib/queue";
 
+const PICKUP_EVERY_MS = 5_000;
 const SWEEP_EVERY_MS = 5 * 60_000;
 const STUCK_AFTER_MS = 10 * 60_000;
 
@@ -57,8 +58,28 @@ async function sweep() {
   if (stuck.length) console.log(`varredura: ${stuck.length} item(ns) reenfileirado(s)`);
 }
 
+// Itens pagos e ainda não enfileirados (o site pode não ter acesso ao Redis).
+// O ID da tarefa inclui a rodada, então reenfileirar um item já na fila não duplica nada.
+async function pickup() {
+  const items = await prisma.importItem.findMany({
+    where: { status: "RESERVED", batch: { order: { status: "PAID" } } },
+    select: { id: true, retryRound: true },
+    orderBy: { createdAt: "asc" },
+    take: 500,
+  });
+  for (const item of items) await enqueueItems([item.id], item.retryRound);
+}
+
 void sweep();
 const timer = setInterval(() => void sweep().catch((e) => console.error("varredura", e)), SWEEP_EVERY_MS);
+let picking = false;
+const pickupTimer = setInterval(() => {
+  if (picking) return;
+  picking = true;
+  pickup()
+    .catch((e) => console.error("busca de itens", e))
+    .finally(() => (picking = false));
+}, PICKUP_EVERY_MS);
 
 // No plano gratuito do Render o worker roda como Web Service: esta rota de saúde mantém o
 // serviço acordado (o UptimeRobot a consulta a cada 5 minutos) e mostra o tamanho da fila.
@@ -80,6 +101,7 @@ const server = process.env.PORT
 async function shutdown() {
   server?.close();
   clearInterval(timer);
+  clearInterval(pickupTimer);
   await worker.close();
   await prisma.$disconnect();
   process.exit(0);

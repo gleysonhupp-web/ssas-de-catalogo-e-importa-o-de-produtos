@@ -28,7 +28,8 @@ export function importQueue(): Queue {
 
 // "round" diferencia um reprocessamento pedido pelo lojista da primeira tentativa.
 export async function enqueueItems(itemIds: string[], round: number | string = 0) {
-  if (itemIds.length === 0) return;
+  // Sem Redis configurado (ex.: o site na Vercel), o worker encontra os itens novos direto no banco.
+  if (itemIds.length === 0 || !process.env.REDIS_URL) return;
   await importQueue().addBulk(
     itemIds.map((id) => ({ name: "import", data: { importItemId: id }, opts: { jobId: `${id}-r${round}` } })),
   );

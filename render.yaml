@@ -1,13 +1,19 @@
 # Blueprint do Render: worker de importação + Redis (Key Value) para a fila.
 # O site Next.js fica na Vercel e o banco no Supabase.
+# O worker roda como Web Service gratuito com uma rota de saúde; o UptimeRobot
+# a consulta a cada 5 minutos para que o serviço não durma. Com cartão cadastrado,
+# troque por "type: worker" (plano starter) e remova a dependência do UptimeRobot.
 services:
-  - type: worker
+  - type: web
     name: catalogo-worker
     runtime: node
-    plan: starter
-    buildCommand: npm ci && npx prisma generate
+    plan: free
+    region: virginia
+    buildCommand: npm ci
     startCommand: npm run worker
     envVars:
+      - key: NODE_VERSION
+        value: "22"
       - key: DATABASE_URL
         sync: false
       - key: DIRECT_URL
@@ -25,10 +31,7 @@ services:
           property: connectionString
   - type: keyvalue
     name: catalogo-fila
-    plan: starter
-    maxmemoryPolicy: noeviction # a fila não pode perder tarefas
-    # A Vercel enfileira as importações pela URL externa (com senha e TLS).
-    # A Vercel não tem IPs fixos nos planos comuns, por isso a liberação é ampla.
-    ipAllowList:
-      - source: 0.0.0.0/0
-        description: vercel
+    plan: free
+    region: virginia
+    maxmemoryPolicy: noeviction # a fila não pode descartar tarefas
+    ipAllowList: [] # só o worker (rede interna) acessa a fila
