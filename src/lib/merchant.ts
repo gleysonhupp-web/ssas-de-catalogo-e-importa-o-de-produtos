@@ -10,11 +10,12 @@ export async function activeStore(accountId: string) {
   });
 }
 
-// Produtos que já existem na loja (importação concluída): não devem ser cobrados de novo.
+// Produtos já comprados para a loja (concluídos, em andamento ou com reprocessamento grátis disponível):
+// nunca são cobrados de novo. Mesma regra de billableCartProducts.
 export async function importedProductIds(storeId: string | undefined): Promise<Set<string>> {
   if (!storeId) return new Set();
   const rows = await prisma.importItem.findMany({
-    where: { storeId, status: "DONE" },
+    where: { storeId },
     select: { catalogProductId: true },
   });
   return new Set(rows.map((r) => r.catalogProductId));

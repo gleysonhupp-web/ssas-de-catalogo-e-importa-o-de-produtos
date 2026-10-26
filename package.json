@@ -9,7 +9,10 @@
     "lint": "eslint",
     "test": "vitest run",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "worker": "tsx src/worker.ts",
+    "postinstall": "prisma generate",
+    "vercel-build": "prisma migrate deploy && next build"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

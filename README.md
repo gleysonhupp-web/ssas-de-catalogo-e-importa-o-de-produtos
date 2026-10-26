@@ -12,7 +12,8 @@ npm install
 npm run db:migrate              # cria as tabelas
 ADMIN_EMAIL=voce@exemplo.com ADMIN_PASSWORD=troque-esta-senha npm run db:seed   # catálogo demo + 1º admin
 npm run dev                     # http://localhost:3000
-npm test                        # testes de preço, créditos e criptografia
+npm run worker                  # processa a fila de importação (outro terminal)
+npm test                        # testes de unidade e de integração (usam o Postgres do .env)
 ```
 
 ## Estrutura
@@ -28,8 +29,12 @@ npm test                        # testes de preço, créditos e criptografia
 2. Catálogo e painel administrativo ✅
 3. Vitrine, busca e carrinho do lojista ✅
 4. Conexão Nuvemshop (OAuth) ✅
-5. Pagamento Pix/cartão e livro-razão de créditos
-6. Motor de importação com fila, idempotência e reprocessamento
+5. Pagamento Pix/cartão (Mercado Pago) e livro-razão de créditos ✅
+6. Motor de importação com fila, idempotência e reprocessamento ✅
+
+## Publicação
+
+Passo a passo em [DEPLOY.md](DEPLOY.md): Supabase (banco), Vercel (site), Render (fila e worker) e UptimeRobot.
 
 ## Testando sem uma loja real
 

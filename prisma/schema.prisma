@@ -8,7 +8,9 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url       = env("DATABASE_URL")
+  // Supabase: DATABASE_URL usa o pooler (porta 6543) e DIRECT_URL a conexão direta, usada nas migrações.
+  directUrl = env("DIRECT_URL")
 }
 
 // ---------- Contas e acesso ----------
@@ -240,6 +242,7 @@ model Payment {
   providerPaymentId String?
   method            String? // pix | card
   amountCents       Int
+  checkoutUrl       String?
   status            PaymentStatus @default(CREATED)
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
@@ -336,6 +339,7 @@ model ImportItem {
   externalProductId String?
   status            ImportItemStatus @default(SELECTED)
   attempts          Int              @default(0)
+  retryRound        Int              @default(0) // reprocessamentos pedidos pelo lojista (grátis)
   lastError         String?
   updatedAt         DateTime         @updatedAt
   createdAt         DateTime         @default(now())

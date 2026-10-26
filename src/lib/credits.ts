@@ -48,9 +48,10 @@ export function computeBalance(lines: LedgerLine[]): Balance {
 // Chaves únicas tornam cada movimento idempotente: repetir a operação não duplica o lançamento.
 export const ledgerKey = {
   grant: (orderId: string) => `grant:${orderId}`,
-  reserve: (importItemId: string) => `reserve:${importItemId}`,
+  // round > 0 é um reprocessamento pedido depois de uma falha definitiva.
+  reserve: (importItemId: string, round = 0) => (round ? `reserve:${importItemId}:${round}` : `reserve:${importItemId}`),
   consume: (importItemId: string) => `consume:${importItemId}`,
-  release: (importItemId: string, attempt: number) => `release:${importItemId}:${attempt}`,
+  release: (importItemId: string, round: number) => `release:${importItemId}:${round}`,
   refund: (orderId: string, refundId: string) => `refund:${orderId}:${refundId}`,
 };
 
