@@ -1,0 +1,18 @@
+# Verifica o site e o worker a cada 10 minutos. Também mantém o worker do Render
+# (plano gratuito) acordado. Se algo cair, a execução falha e o GitHub avisa por e-mail.
+name: monitor
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Site
+        run: curl -fsS --retry 3 --retry-delay 10 --max-time 30 https://ssas-de-catalogo-e-importa-o-de-pro.vercel.app/api/saude
+      - name: Worker
+        run: curl -fsS --retry 5 --retry-delay 20 --max-time 90 https://catalogo-worker.onrender.com/
