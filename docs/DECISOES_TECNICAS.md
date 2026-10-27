@@ -81,3 +81,15 @@ documentado.
 
 **Motivo:** o repasse exige PSP com split, contrato com fornecedores e análise
 regulatória/tributária (ver `PESQUISA_REGULATORIA_INTERNACIONAL.md`).
+
+## DT-10: Fila no próprio Postgres (pg-boss) em vez de Redis (proposta, aguarda o dono)
+
+**Contexto:** o Redis gratuito do Render não é durável, e o sistema já usa o banco como fonte da
+verdade (DT-04).
+
+**Proposta:** trocar o BullMQ pelo pg-boss, que roda no Supabase e tem custo zero de fila, e manter
+um worker persistente no Render (Starter, cerca de US$ 7/mês). Alternativas sem worker: Inngest ou
+QStash, com throttling por loja, mas cada tarefa fica limitada à duração das funções da Vercel.
+Comparação em `PESQUISA_TECNICA_INTEGRACOES.md` §6.3.
+
+**Por que esperar:** envolve custo mensal e não bloqueia o MVP.

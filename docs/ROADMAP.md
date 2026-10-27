@@ -31,6 +31,8 @@ Inclui a parte do MVP que precisa do dono.
 | 1.7 | Sentry no site e no worker, e logs JSON com correlationId | 👤 conta gratuita |
 | 1.8 | Atualizar para Next 16 (resolve os alertas do `npm audit`) | — |
 | 1.9 | Worker no Render apontando para `main` e fora do plano gratuito (ou fila gerenciada) | 👤💰 |
+| 1.9b | Instalação começando pela loja de apps da Nuvemshop (cria a conta do lojista na volta do OAuth), exigida na homologação | 1.1 |
+| 1.9c | Fila: decidir entre pg-boss e Redis pago (DT-10); limitador por loja | 👤💰 |
 | 1.10 | **Teste ponta a ponta real:** loja de teste Nuvemshop, pagamento sandbox e importação de 50 produtos (cenários 1, 2 e 3 contra serviços reais) | 1.1, 1.2, 1.4 |
 
 ## Fase 2: Rede de fornecedores

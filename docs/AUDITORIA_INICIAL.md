@@ -78,7 +78,8 @@ Legenda:
 | Webhook de pagamento | ✅ | Consulta o provedor antes de liberar, trava o pedido com `FOR UPDATE` e confere o valor. Testes provam que webhooks repetidos e simultâneos liberam uma única vez (cenário obrigatório 5). |
 | Livro-razão de créditos | ✅ | `CreditLedgerEntry` com chave idempotente única; o saldo é a soma dos lançamentos. Não há carteira pré-paga exposta ao usuário. |
 | OAuth Nuvemshop | 🔒 | `api/nuvemshop/conectar` e `retorno`, com state de uso único ligado à conta e token cifrado com AES-256-GCM. Sem app de parceiro criado, nunca foi testado contra a Nuvemshop real. |
-| Webhooks Nuvemshop (desinstalação, LGPD) | 🟡 | HMAC conferido. Não verificado se a lista de eventos e o formato do corpo batem com a documentação atual (ver `PESQUISA_TECNICA_INTEGRACOES.md`). |
+| Webhooks Nuvemshop (desinstalação, LGPD) | ✅ após correção | O HMAC já estava certo, mas os eventos de LGPD tinham nomes errados e chegam sem `event` no corpo, então um pedido de exclusão seria ignorado. Além disso, `app/uninstalled` nunca era registrado. **Corrigido nesta fase** (ver `PESQUISA_TECNICA_INTEGRACOES.md`, seção 7). |
+| Instalação iniciada pela loja de apps da Nuvemshop | ❌ | O retorno do OAuth exige usuário logado e `state`. Para homologar o app na loja de apps, a instalação precisa funcionar começando pela Nuvemshop, inclusive para quem ainda não tem conta. Fica para a Fase 1. |
 | Motor de importação | ✅ | `src/lib/importer.ts` e `src/worker.ts`: retry com backoff, limite de vazão, reconciliação por SKU contra resposta perdida, devolução da reserva em falha definitiva e varredura de itens parados. Testado com servidor simulado (`scripts/mock-nuvemshop.mjs`) para 50 produtos, falha parcial e resposta perdida (cenários 1 e 3, simulados). |
 | Imagens e variantes na importação | 🟠 | Imagens por URL (até 9) e até 3 atributos de variante. As imagens de produção são placeholders. |
 | Histórico de importações | ✅ | `/pedidos` e `/pedidos/[id]`, com atualização automática e reprocessamento grátis. |
@@ -137,6 +138,9 @@ fictícios como "Indisponível" antes de abrir a plataforma a lojistas reais.
 - **Render, plano gratuito:** dorme sem tráfego. Hoje ele é mantido acordado pelo `monitor.yml` e
   acordado pelo site ao pagar. Para operar de verdade, o recomendado é o plano pago (Starter) ou
   trocar a fila por um serviço gerenciado (ver `ARQUITETURA.md`).
+- **Redis do Render (Key Value Free):** não persiste em disco, então um reinício apaga as tarefas
+  pendentes. Nada se perde porque o worker reencontra os itens no banco, mas isso torna o Redis
+  dispensável (ver DT-10).
 - Não existe ambiente de staging separado: as previews da Vercel não têm banco.
 
 ## 8. Prioridades
