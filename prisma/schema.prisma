@@ -1,0 +1,370 @@
+// Modelo de dados do MVP (capítulo 11 do documento-mestre).
+// Regra central: o catálogo interno e os produtos publicados em cada loja
+// são registros diferentes, ligados por ImportItem.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url       = env("DATABASE_URL")
+  // Supabase: DATABASE_URL usa o pooler (porta 6543) e DIRECT_URL a conexão direta, usada nas migrações.
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------- Contas e acesso ----------
+
+enum UserRole {
+  MERCHANT // lojista
+  CONTENT_OPERATOR // operador de conteúdo
+  REVIEWER // revisor
+  SUPPORT // suporte
+  FINANCE // financeiro
+  ADMIN // administrador
+}
+
+model Account {
+  id             String   @id @default(cuid())
+  name           String
+  termsAcceptedAt DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  users        User[]
+  stores       Store[]
+  cartItems    CartItem[]
+  orders       Order[]
+  creditLedger CreditLedgerEntry[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  accountId    String
+  email        String   @unique
+  name         String?
+  passwordHash String
+  role         UserRole @default(MERCHANT)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  account  Account   @relation(fields: [accountId], references: [id])
+  sessions Session[]
+}
+
+model Session {
+  id        String   @id // hash do token de sessão; o token em si fica só no cookie
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ---------- Lojas Nuvemshop ----------
+
+enum StoreStatus {
+  CONNECTED
+  REVOKED
+}
+
+model Store {
+  id              String      @id @default(cuid())
+  accountId       String
+  platform        String      @default("nuvemshop")
+  externalStoreId String // user_id devolvido pelo OAuth da Nuvemshop
+  name            String?
+  status          StoreStatus @default(CONNECTED)
+  accessTokenEnc  String // token cifrado (AES-256-GCM); nunca vai ao navegador nem a logs
+  scopes          String
+  connectedAt     DateTime    @default(now())
+  revokedAt       DateTime?
+
+  account      Account       @relation(fields: [accountId], references: [id])
+  importBatches ImportBatch[]
+  importItems  ImportItem[]
+
+  @@unique([platform, externalStoreId])
+  @@index([accountId])
+}
+
+model OAuthState {
+  state     String   @id
+  accountId String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+// ---------- Catálogo ----------
+
+enum EditorialStatus {
+  DRAFT // rascunho
+  IN_REVIEW // revisão
+  APPROVED // aprovado
+  UNAVAILABLE // indisponível
+}
+
+model CatalogCategory {
+  id       String  @id @default(cuid())
+  name     String
+  slug     String  @unique
+  parentId String?
+
+  parent   CatalogCategory?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children CatalogCategory[] @relation("CategoryTree")
+  products CatalogProduct[]
+}
+
+model CatalogProduct {
+  id              String          @id @default(cuid())
+  code            String          @unique // ID interno estável, ex.: CAT-BEA-000142; nunca reutilizar
+  name            String
+  description     String
+  brand           String?
+  categoryId      String
+  attributes      Json            @default("{}")
+  suggestedPrice  Decimal?        @db.Decimal(10, 2) // preço demonstrativo, não é preço real
+  status          EditorialStatus @default(DRAFT)
+  version         Int             @default(1)
+  regulatoryNotes String?
+  updatedBy       String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  category    CatalogCategory  @relation(fields: [categoryId], references: [id])
+  variants    CatalogVariant[]
+  media       MediaAsset[]
+  orderItems  OrderItem[]
+  importItems ImportItem[]
+  cartItems   CartItem[]
+
+  @@index([categoryId, status])
+}
+
+model CatalogVariant {
+  id               String  @id @default(cuid())
+  catalogProductId String
+  sku              String  @unique // SKU interno
+  options          Json    @default("{}") // ex.: { "Cor": "05", "Volume": "4ml" }
+  gtin             String?
+  attributes       Json    @default("{}")
+
+  product CatalogProduct @relation(fields: [catalogProductId], references: [id], onDelete: Cascade)
+
+  @@index([catalogProductId])
+}
+
+model MediaAsset {
+  id               String  @id @default(cuid())
+  catalogProductId String
+  url              String
+  position         Int     @default(0)
+  altText          String?
+  license          String // tipo/escopo da licença de uso comercial
+  source           String // origem autorizada (evidência guardada fora do banco)
+
+  product CatalogProduct @relation(fields: [catalogProductId], references: [id], onDelete: Cascade)
+
+  @@index([catalogProductId, position])
+}
+
+// ---------- Carrinho ----------
+
+// Seleção em andamento; vira lista imutável (OrderItem) no checkout.
+model CartItem {
+  accountId        String
+  catalogProductId String
+  addedAt          DateTime @default(now())
+
+  account Account        @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  product CatalogProduct @relation(fields: [catalogProductId], references: [id])
+
+  @@id([accountId, catalogProductId])
+}
+
+// ---------- Pedidos e pagamentos ----------
+
+enum OrderStatus {
+  DRAFT
+  PENDING_PAYMENT
+  PAID
+  EXPIRED
+  CANCELED
+}
+
+model Order {
+  id             String      @id @default(cuid())
+  accountId      String
+  storeId        String
+  status         OrderStatus @default(DRAFT)
+  unitPriceCents Int // preço travado no momento da compra
+  quantity       Int
+  totalCents     Int
+  expiresAt      DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  account  Account       @relation(fields: [accountId], references: [id])
+  items    OrderItem[]
+  payments Payment[]
+  batch    ImportBatch?
+
+  @@index([accountId, createdAt])
+}
+
+model OrderItem {
+  id               String @id @default(cuid())
+  orderId          String
+  catalogProductId String
+  productVersion   Int // versão do catálogo vista pelo cliente no checkout
+
+  order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product CatalogProduct @relation(fields: [catalogProductId], references: [id])
+
+  @@unique([orderId, catalogProductId]) // lista imutável, sem itens repetidos
+}
+
+enum PaymentStatus {
+  CREATED
+  PENDING
+  CONFIRMED
+  FAILED
+  REFUNDED
+  DISPUTED
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  orderId           String
+  provider          String
+  providerPaymentId String?
+  method            String? // pix | card
+  amountCents       Int
+  checkoutUrl       String?
+  status            PaymentStatus @default(CREATED)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@unique([provider, providerPaymentId])
+}
+
+// Cada evento de webhook é gravado uma vez: reenvio não duplica crédito.
+model PaymentEvent {
+  id          String   @id @default(cuid())
+  provider    String
+  eventId     String
+  payload     Json
+  processedAt DateTime @default(now())
+
+  @@unique([provider, eventId])
+}
+
+// ---------- Livro-razão de créditos ----------
+
+enum LedgerEntryType {
+  GRANT // pagamento confirmado libera unidades
+  RESERVE // unidade reservada para um item/loja
+  CONSUME // produto confirmado na Nuvemshop
+  RELEASE // falha definitiva devolve a reserva
+  REFUND // estorno remove unidades
+}
+
+// O saldo é resultado da soma dos lançamentos, nunca um número alterado sem rastro.
+model CreditLedgerEntry {
+  id             String          @id @default(cuid())
+  accountId      String
+  orderId        String?
+  importItemId   String?
+  type           LedgerEntryType
+  quantity       Int // sinal aplicado pelo domínio (ver src/lib/credits.ts)
+  idempotencyKey String          @unique
+  createdAt      DateTime        @default(now())
+
+  account Account @relation(fields: [accountId], references: [id])
+
+  @@index([accountId])
+  @@index([importItemId])
+}
+
+// ---------- Importação ----------
+
+enum BatchStatus {
+  DRAFT
+  AWAITING_PAYMENT
+  RELEASED
+  PROCESSING
+  FINISHED
+  PARTIAL
+  FAILED
+}
+
+model ImportBatch {
+  id        String      @id @default(cuid())
+  storeId   String
+  orderId   String      @unique
+  settings  Json // política de preço, categoria, publicar oculto etc.
+  status    BatchStatus @default(DRAFT)
+  total     Int
+  succeeded Int         @default(0)
+  failed    Int         @default(0)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  store Store        @relation(fields: [storeId], references: [id])
+  order Order        @relation(fields: [orderId], references: [id])
+  items ImportItem[]
+}
+
+enum ImportItemStatus {
+  SELECTED
+  RESERVED
+  QUEUED
+  PROCESSING
+  DONE
+  FAILED
+  SKIPPED
+}
+
+model ImportItem {
+  id                String           @id @default(cuid())
+  batchId           String
+  storeId           String
+  catalogProductId  String
+  productVersion    Int
+  mode              String           @default("create")
+  externalProductId String?
+  status            ImportItemStatus @default(SELECTED)
+  attempts          Int              @default(0)
+  retryRound        Int              @default(0) // reprocessamentos pedidos pelo lojista (grátis)
+  lastError         String?
+  updatedAt         DateTime         @updatedAt
+  createdAt         DateTime         @default(now())
+
+  batch   ImportBatch    @relation(fields: [batchId], references: [id])
+  store   Store          @relation(fields: [storeId], references: [id])
+  product CatalogProduct @relation(fields: [catalogProductId], references: [id])
+
+  // Idempotência: um produto do catálogo é criado no máximo uma vez por loja.
+  @@unique([storeId, catalogProductId, mode])
+  @@index([batchId, status])
+}
+
+// ---------- Auditoria ----------
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  actorId       String?
+  event         String
+  entity        String
+  entityId      String
+  before        Json?
+  after         Json?
+  correlationId String?
+  createdAt     DateTime @default(now())
+
+  @@index([entity, entityId])
+}
