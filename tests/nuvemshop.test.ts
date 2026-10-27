@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { NuvemshopClient, NuvemshopError, toNuvemshopPayload, verifyWebhook } from "@/lib/nuvemshop";
+import { NuvemshopClient, NuvemshopError, toNuvemshopPayload, verifyWebhook, webhookTopic } from "@/lib/nuvemshop";
 
 beforeAll(() => {
   process.env.NUVEMSHOP_CLIENT_SECRET = "segredo";
@@ -88,5 +88,19 @@ describe("verifyWebhook", () => {
     expect(verifyWebhook(body, sig)).toBe(true);
     expect(verifyWebhook(body + " ", sig)).toBe(false);
     expect(verifyWebhook(body, null)).toBe(false);
+  });
+});
+
+describe("webhookTopic", () => {
+  it("usa o evento do corpo (app/uninstalled) ou o tópico da URL (LGPD, sem evento no corpo)", () => {
+    expect(webhookTopic(null, { event: "app/uninstalled" })).toBe("app/uninstalled");
+    expect(webhookTopic("app/store_redact", { store_id: 1 } as { event?: unknown })).toBe("app/store_redact");
+    expect(webhookTopic("customers/data_request", {})).toBe("customers/data_request");
+  });
+
+  it("ignora tópicos desconhecidos em vez de revogar a loja", () => {
+    expect(webhookTopic("store/redact", {})).toBeNull();
+    expect(webhookTopic(null, { event: "product/created" })).toBeNull();
+    expect(webhookTopic(null, {})).toBeNull();
   });
 });

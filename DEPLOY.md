@@ -41,7 +41,7 @@ os busca a cada 5 segundos. Só o worker fala com a fila, pela rede interna do R
 ## 4. Nuvemshop (portal de parceiros)
 1. Crie o aplicativo em https://partners.nuvemshop.com.br com a permissão **write_products**.
 2. URL de redirecionamento: `{APP_URL}/api/nuvemshop/retorno`
-3. Webhooks (desinstalação e LGPD): `{APP_URL}/api/nuvemshop/webhook`
+3. Webhooks (desinstalação e LGPD): `{APP_URL}/api/nuvemshop/webhook?topico=app/store_redact`, `...?topico=customer/redact` e `...?topico=customers/data_request` (os eventos de LGPD não trazem o nome do evento no corpo; a desinstalação é registrada automaticamente ao conectar a loja)
 4. Teste primeiro numa loja de demonstração, publicando 5 produtos com imagem e variante.
 
 ## 5. Mercado Pago

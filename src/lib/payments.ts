@@ -129,7 +129,9 @@ export class MercadoPagoProvider implements PaymentProvider {
     const parts = Object.fromEntries(sig.split(",").map((kv) => kv.trim().split("=") as [string, string]));
     if (!parts.ts || !parts.v1) return null;
     const id = /^[a-z0-9]+$/i.test(dataId) ? dataId.toLowerCase() : dataId;
-    const manifest = `id:${id};request-id:${headers.get("x-request-id") ?? ""};ts:${parts.ts};`;
+    // Partes ausentes saem do manifest (regra da documentação e dos SDKs oficiais).
+    const requestId = headers.get("x-request-id");
+    const manifest = `id:${id};${requestId ? `request-id:${requestId};` : ""}ts:${parts.ts};`;
     const expected = createHmac("sha256", this.webhookSecret).update(manifest).digest("hex");
     const a = Buffer.from(expected);
     const b = Buffer.from(parts.v1);

@@ -1,5 +1,5 @@
 // Cliente da API oficial da Nuvemshop (capítulo 8).
-// Documentação: https://tiendanube.github.io/api-documentation/intro
+// Documentação: https://nuvemshop.dev/en-US/api/getting-started
 //   - OAuth: /apps/{app_id}/authorize → POST /apps/authorize/token (JSON)
 //   - API:   https://api.nuvemshop.com.br/{versão}/{store_id}, header Authorization: Bearer
 //   - Limite: balde de 40 requisições, vazão de 2/s; 429 deve ser reenviado depois do reset.
@@ -53,6 +53,17 @@ export function verifyWebhook(rawBody: string, signature: string | null): boolea
   const a = Buffer.from(expected);
   const b = Buffer.from(signature);
   return a.length === b.length && timingSafeEqual(a, b);
+}
+
+// Eventos de privacidade (LGPD) chegam sem o campo "event" no corpo: cada um é configurado no portal
+// de parceiros com uma URL própria (?topico=...). app/uninstalled é registrado pela API e traz "event".
+export type WebhookTopic = "app/uninstalled" | "app/store_redact" | "customer/redact" | "customers/data_request";
+
+const TOPICS: WebhookTopic[] = ["app/uninstalled", "app/store_redact", "customer/redact", "customers/data_request"];
+
+export function webhookTopic(query: string | null, body: { event?: unknown }): WebhookTopic | null {
+  const candidate = typeof body.event === "string" ? body.event : query;
+  return TOPICS.find((t) => t === candidate) ?? null;
 }
 
 export class NuvemshopError extends Error {
@@ -124,6 +135,11 @@ export class NuvemshopClient {
 
   getStore() {
     return this.request<{ id: number; name: Record<string, string>; main_language?: string }>("GET", "/store");
+  }
+
+  // Sem este webhook, uma loja que desinstala o app continuaria "conectada" com um token inválido.
+  registerWebhook(event: "app/uninstalled", url: string) {
+    return this.request<{ id: number }>("POST", "/webhooks", { event, url });
   }
 
   createProduct(payload: NuvemshopProductPayload) {
