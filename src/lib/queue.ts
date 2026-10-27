@@ -28,9 +28,17 @@ export function importQueue(): Queue {
 
 // "round" diferencia um reprocessamento pedido pelo lojista da primeira tentativa.
 export async function enqueueItems(itemIds: string[], round: number | string = 0) {
+  if (itemIds.length === 0) return;
   // Sem Redis configurado (ex.: o site na Vercel), o worker encontra os itens novos direto no banco.
-  if (itemIds.length === 0 || !process.env.REDIS_URL) return;
+  if (!process.env.REDIS_URL) return wakeWorker();
   await importQueue().addBulk(
     itemIds.map((id) => ({ name: "import", data: { importItemId: id }, opts: { jobId: `${id}-r${round}` } })),
   );
+}
+
+// O worker no plano gratuito do Render dorme sem tráfego; uma requisição o acorda para buscar os itens.
+async function wakeWorker() {
+  const url = process.env.WORKER_URL;
+  if (!url) return;
+  await fetch(url, { signal: AbortSignal.timeout(2_500) }).catch(() => {});
 }

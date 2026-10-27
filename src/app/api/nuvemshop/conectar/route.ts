@@ -8,6 +8,10 @@ import { authorizeUrl } from "@/lib/nuvemshop";
 export async function GET(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.redirect(new URL("/entrar", req.url));
+  if (!process.env.NUVEMSHOP_CLIENT_ID || !process.env.NUVEMSHOP_CLIENT_SECRET) {
+    const erro = "A conexão com a Nuvemshop ainda não foi ativada nesta plataforma. Tente novamente mais tarde.";
+    return NextResponse.redirect(new URL(`/lojas?erro=${encodeURIComponent(erro)}`, req.url));
+  }
 
   const state = randomToken(24);
   await prisma.oAuthState.create({
