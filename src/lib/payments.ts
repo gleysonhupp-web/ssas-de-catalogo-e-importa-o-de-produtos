@@ -2,6 +2,7 @@
 // a liberação só acontece depois de consultar o provedor no servidor.
 
 import { createHmac, timingSafeEqual } from "node:crypto";
+import type { UserRole } from "@prisma/client";
 
 export type ProviderStatus = "pending" | "approved" | "rejected" | "refunded" | "charged_back" | "cancelled";
 
@@ -156,13 +157,28 @@ export class FakeProvider implements PaymentProvider {
   }
 }
 
+// Em produção, o pagamento simulado só serve para a equipe testar o fluxo de ponta a ponta:
+// um lojista nunca consegue importar sem pagar.
+export function canUseFakePayments(role: UserRole): boolean {
+  return process.env.NODE_ENV !== "production" || role === "ADMIN" || role === "FINANCE";
+}
+
 let provider: PaymentProvider | null = null;
+
+export function resetPaymentProviderForTests() {
+  provider = null;
+}
 
 export function paymentProvider(): PaymentProvider {
   if (provider) return provider;
   const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
   if (token) {
-    provider = new MercadoPagoProvider(token, process.env.MERCADOPAGO_WEBHOOK_SECRET ?? "");
+    const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET ?? "";
+    // Sem segredo, a assinatura do webhook seria um HMAC com chave vazia, que qualquer um calcula.
+    if (!secret && process.env.NODE_ENV === "production") {
+      throw new Error("MERCADOPAGO_WEBHOOK_SECRET não configurado");
+    }
+    provider = new MercadoPagoProvider(token, secret);
   } else {
     if (process.env.NODE_ENV === "production" && process.env.ALLOW_FAKE_PAYMENTS !== "1") {
       throw new Error("MERCADOPAGO_ACCESS_TOKEN não configurado");

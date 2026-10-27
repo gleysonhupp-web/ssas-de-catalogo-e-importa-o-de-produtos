@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { applyProviderPayment } from "@/lib/orders";
-import { paymentProvider } from "@/lib/payments";
+import { canUseFakePayments, paymentProvider } from "@/lib/payments";
 import { formatBRL } from "@/lib/pricing";
 import { enqueueItems } from "@/lib/queue";
 
@@ -12,6 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function FakePayment({ params }: { params: Promise<{ id: string }> }) {
   if (paymentProvider().name !== "fake") notFound();
   const user = await requireUser();
+  if (!canUseFakePayments(user.role)) notFound();
   const { id } = await params;
   const order = await prisma.order.findFirst({ where: { id, accountId: user.accountId } });
   if (!order) notFound();
@@ -19,6 +20,7 @@ export default async function FakePayment({ params }: { params: Promise<{ id: st
   async function pay(status: "approved" | "rejected") {
     "use server";
     const u = await requireUser();
+    if (!canUseFakePayments(u.role)) notFound();
     const o = await prisma.order.findFirstOrThrow({ where: { id, accountId: u.accountId } });
     const outcome = await applyProviderPayment("fake", {
       id: `fake-${o.id}`,

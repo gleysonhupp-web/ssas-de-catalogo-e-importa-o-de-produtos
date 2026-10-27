@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { activeStore } from "@/lib/merchant";
 import { CheckoutError, createOrderFromCart, type ImportSettings } from "@/lib/orders";
-import { paymentProvider } from "@/lib/payments";
+import { canUseFakePayments, paymentProvider } from "@/lib/payments";
 
 export type CheckoutState = { error?: string };
 
@@ -25,10 +25,14 @@ export async function startCheckout(_: CheckoutState, form: FormData): Promise<C
     stock: stockRaw === "ilimitado" ? null : Math.max(0, Math.floor(Number(stockRaw) || 0)),
   };
 
+  const provider = paymentProvider();
+  if (provider.name === "fake" && !canUseFakePayments(user.role)) {
+    return { error: "Os pagamentos ainda estão sendo ativados nesta plataforma. Seu carrinho foi guardado." };
+  }
+
   let checkoutUrl: string;
   try {
     const order = await createOrderFromCart(user.accountId, store.id, settings);
-    const provider = paymentProvider();
     const checkout = await provider.createCheckout({
       orderId: order.id,
       title: `Importação de ${order.quantity} produto(s) para a Nuvemshop`,
