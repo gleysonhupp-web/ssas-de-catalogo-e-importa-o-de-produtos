@@ -105,7 +105,7 @@ export class NuvemshopClient {
           method,
           headers: {
             Authorization: `Bearer ${this.opts.accessToken}`,
-            "User-Agent": `${process.env.NUVEMSHOP_APP_NAME ?? "Catalogo Pronto"} (${process.env.NUVEMSHOP_CONTACT_EMAIL ?? "suporte@exemplo.com"})`,
+            "User-Agent": `${process.env.NUVEMSHOP_APP_NAME ?? "LoteOn"} (${process.env.NUVEMSHOP_CONTACT_EMAIL ?? "suporte@exemplo.com"})`,
             ...(body ? { "Content-Type": "application/json; charset=utf-8" } : {}),
           },
           body: body ? JSON.stringify(body) : undefined,

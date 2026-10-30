@@ -9,7 +9,7 @@ import "./globals.css";
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Catálogo e importação de produtos",
+  title: { default: "LoteOn | Catálogo e importação de produtos", template: "%s | LoteOn" },
   description: "Escolha produtos e importe para sua loja Nuvemshop",
 };
 
@@ -23,7 +23,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <header className="header">
           <div className="container" style={{ paddingTop: 12, paddingBottom: 12 }}>
             <nav>
-              <Link href="/" className="brand">Catálogo Pronto</Link>
+              <Link href="/" className="brand">LoteOn</Link>
               <Link href="/catalogo">Catálogo</Link>
               {user && <Link href="/lojas">Minha loja</Link>}
               {user && <Link href="/pedidos">Importações</Link>}
