@@ -126,6 +126,7 @@ model CatalogProduct {
   categoryId      String
   attributes      Json            @default("{}")
   suggestedPrice  Decimal?        @db.Decimal(10, 2) // preço demonstrativo, não é preço real
+  supplierPrice   Decimal?        @db.Decimal(10, 2) // quanto o lojista paga ao fornecedor (referência, não vendemos a mercadoria)
   status          EditorialStatus @default(DRAFT)
   version         Int             @default(1)
   regulatoryNotes String?
@@ -176,6 +177,7 @@ model MediaAsset {
 model CartItem {
   accountId        String
   catalogProductId String
+  resalePriceCents Int? // preço de venda escolhido pelo lojista antes da importação
   addedAt          DateTime @default(now())
 
   account Account        @relation(fields: [accountId], references: [id], onDelete: Cascade)
@@ -219,6 +221,7 @@ model OrderItem {
   orderId          String
   catalogProductId String
   productVersion   Int // versão do catálogo vista pelo cliente no checkout
+  resalePriceCents Int? // preço de venda travado no checkout; null = regra geral do lote
 
   order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product CatalogProduct @relation(fields: [catalogProductId], references: [id])
@@ -340,6 +343,7 @@ model ImportItem {
   status            ImportItemStatus @default(SELECTED)
   attempts          Int              @default(0)
   retryRound        Int              @default(0) // reprocessamentos pedidos pelo lojista (grátis)
+  resalePriceCents  Int? // copiado do OrderItem; tem prioridade sobre a regra de preço do lote
   lastError         String?
   updatedAt         DateTime         @updatedAt
   createdAt         DateTime         @default(now())

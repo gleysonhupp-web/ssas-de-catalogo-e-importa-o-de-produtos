@@ -61,6 +61,7 @@ export interface ProductInput {
   brand?: string;
   categoryId: string;
   suggestedPrice?: number;
+  supplierPrice?: number;
   regulatoryNotes?: string;
   images: { url: string; license: string; source: string; altText?: string }[];
   variants: { sku: string; options: Record<string, string>; gtin?: string }[];
@@ -82,6 +83,7 @@ export async function saveProduct(id: string | null, input: ProductInput, actorI
       brand: input.brand || null,
       categoryId: input.categoryId,
       suggestedPrice: input.suggestedPrice ?? null,
+      supplierPrice: input.supplierPrice ?? null,
       regulatoryNotes: input.regulatoryNotes || null,
       updatedBy: actorId,
     };
@@ -147,6 +149,7 @@ export async function importParsedProducts(products: ParsedProduct[], actorId: s
         brand: p.brand,
         categoryId: bySlug.get(p.categorySlug)!,
         suggestedPrice: p.suggestedPrice,
+        supplierPrice: p.supplierPrice,
         images: p.images.map((url) => ({ url, license: p.license, source: p.source, altText: p.name })),
         variants: p.variants,
       },

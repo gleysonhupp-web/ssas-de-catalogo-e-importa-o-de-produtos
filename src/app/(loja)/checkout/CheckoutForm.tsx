@@ -17,7 +17,7 @@ export function CheckoutForm({ total }: { total: string }) {
       {state.error && <p className="alert">{state.error}</p>}
       <strong>Como os produtos chegam na sua loja</strong>
       <label>
-        Preço de venda
+        Preço de venda dos produtos sem preço definido no carrinho
         <select name="priceMode" defaultValue="suggested">
           <option value="suggested">Usar o preço sugerido do catálogo</option>
           <option value="markup">Preço sugerido + porcentagem</option>

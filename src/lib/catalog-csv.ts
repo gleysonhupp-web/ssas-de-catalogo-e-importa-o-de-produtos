@@ -1,6 +1,6 @@
 // Importação interna de catálogo por CSV (capítulo 6).
 // Uma linha por variante; linhas com o mesmo "codigo" formam um produto.
-// Colunas: codigo,nome,descricao,marca,categoria,sku,opcoes,gtin,imagens,licenca,origem,preco_sugerido
+// Colunas: codigo,nome,descricao,marca,categoria,sku,opcoes,gtin,imagens,licenca,origem,preco_sugerido[,preco_fornecedor]
 //   opcoes:  "Cor:05 Nude|Volume:4ml"   imagens: "https://a.jpg|https://b.jpg"
 
 export interface ParsedVariant {
@@ -16,6 +16,7 @@ export interface ParsedProduct {
   brand?: string;
   categorySlug: string;
   suggestedPrice?: number;
+  supplierPrice?: number;
   images: string[];
   license: string;
   source: string;
@@ -139,6 +140,11 @@ export function parseCatalogCsv(text: string, knownCategorySlugs: Set<string>): 
     if (suggestedPrice !== undefined && (!Number.isFinite(suggestedPrice) || suggestedPrice < 0)) {
       errs.push(`preço sugerido inválido: ${priceRaw}`);
     }
+    const supplierRaw = col(r, "preco_fornecedor").replace(",", ".");
+    const supplierPrice = supplierRaw ? Number(supplierRaw) : undefined;
+    if (supplierPrice !== undefined && (!Number.isFinite(supplierPrice) || supplierPrice < 0)) {
+      errs.push(`preço no fornecedor inválido: ${supplierRaw}`);
+    }
 
     if (errs.length) {
       errs.forEach((message) => issues.push({ line, message }));
@@ -163,6 +169,7 @@ export function parseCatalogCsv(text: string, knownCategorySlugs: Set<string>): 
       brand: col(r, "marca") || undefined,
       categorySlug,
       suggestedPrice,
+      supplierPrice,
       images,
       license: col(r, "licenca"),
       source: col(r, "origem"),

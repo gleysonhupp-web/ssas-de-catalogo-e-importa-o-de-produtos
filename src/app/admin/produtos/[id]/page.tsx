@@ -72,6 +72,7 @@ export default async function EditProduct({
           brand: product.brand ?? "",
           categoryId: product.categoryId,
           suggestedPrice: product.suggestedPrice?.toString() ?? "",
+          supplierPrice: product.supplierPrice?.toString() ?? "",
           regulatoryNotes: product.regulatoryNotes ?? "",
           variants: variantsToText(
             product.variants.map((v) => ({ sku: v.sku, options: v.options as Record<string, string>, gtin: v.gtin ?? undefined })),
