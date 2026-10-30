@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { activeStore, importedProductIds } from "@/lib/merchant";
+import { activeStore, decimalToCents, importedProductIds } from "@/lib/merchant";
+import { formatBRL } from "@/lib/pricing";
 import { addToCart, removeFromCart } from "../../actions";
 
 export const dynamic = "force-dynamic";
@@ -47,9 +48,14 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               </span>
             ))}
           </div>
+          {product.supplierPrice !== null && (
+            <p className="small">
+              Preço no fornecedor (referência): <strong>{formatBRL(decimalToCents(product.supplierPrice)!)}</strong>
+            </p>
+          )}
           <p className="muted small">
-            O anúncio é criado com nome, descrição, fotos e variantes. Preço de venda e estoque ficam por sua conta;
-            este serviço não fornece a mercadoria.
+            O anúncio é criado com nome, descrição, fotos, variantes e o preço de venda que você definir no carrinho,
+            antes da importação. O estoque fica por sua conta; este serviço não fornece a mercadoria.
           </p>
           {already ? (
             <span className="badge badge-warn">Já importado para sua loja</span>

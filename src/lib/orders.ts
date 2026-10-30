@@ -38,7 +38,9 @@ export async function billableCartProducts(accountId: string, storeId: string) {
       })
     ).map((i) => i.catalogProductId),
   );
-  return cart.filter((c) => c.product.status === "APPROVED" && !existing.has(c.catalogProductId)).map((c) => c.product);
+  return cart
+    .filter((c) => c.product.status === "APPROVED" && !existing.has(c.catalogProductId))
+    .map((c) => ({ ...c.product, resalePriceCents: c.resalePriceCents }));
 }
 
 export async function createOrderFromCart(accountId: string, storeId: string, settings: ImportSettings) {
@@ -64,7 +66,13 @@ export async function createOrderFromCart(accountId: string, storeId: string, se
         quantity: q.quantity,
         totalCents: q.totalCents,
         expiresAt: new Date(Date.now() + ORDER_TTL_MS),
-        items: { create: products.map((p) => ({ catalogProductId: p.id, productVersion: p.version })) },
+        items: {
+          create: products.map((p) => ({
+            catalogProductId: p.id,
+            productVersion: p.version,
+            resalePriceCents: p.resalePriceCents,
+          })),
+        },
         batch: {
           create: {
             storeId,
@@ -173,6 +181,7 @@ export async function applyProviderPayment(provider: string, payment: ProviderPa
             storeId: order.storeId,
             catalogProductId: item.catalogProductId,
             productVersion: item.productVersion,
+            resalePriceCents: item.resalePriceCents,
             status: "RESERVED",
           },
         });

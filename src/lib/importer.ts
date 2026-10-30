@@ -97,7 +97,10 @@ export async function processImportItem(
           language: "pt",
           publish: settings.publish,
           stock: settings.stock,
-          priceCents: salePriceCents(item.product.suggestedPrice ? Number(item.product.suggestedPrice) : null, settings),
+          // O preço escolhido pelo lojista para este produto vale mais que a regra geral do lote.
+          priceCents:
+            item.resalePriceCents ??
+            salePriceCents(item.product.suggestedPrice ? Number(item.product.suggestedPrice) : null, settings),
         },
       );
     } catch (e) {

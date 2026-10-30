@@ -28,6 +28,17 @@ describe("parseCatalogCsv", () => {
     expect(products[0].suggestedPrice).toBe(39.9);
   });
 
+  it("lê o preço no fornecedor quando a coluna existe", () => {
+    const csv = [
+      `${HEADER},preco_fornecedor`,
+      "CAT-BEA-000143,Batom,Acabamento matte,Marca X,batom,B143-1,Cor:01 Nude,,https://img/a.jpg,própria,estúdio,399.90,\"99,90\"",
+      "CAT-BEA-000144,Base,Acabamento matte,Marca X,base,B144-1,,,https://img/a.jpg,própria,estúdio,,-1",
+    ].join("\n");
+    const { products, issues } = parseCatalogCsv(csv, cats);
+    expect(products[0].supplierPrice).toBe(99.9);
+    expect(issues).toEqual([{ line: 3, message: "preço no fornecedor inválido: -1" }]);
+  });
+
   it("aponta a linha e o motivo de cada erro", () => {
     const csv = [
       HEADER,

@@ -47,3 +47,23 @@ function unitPriceFor(quantity: number, policy: PricingPolicy): number {
 export function formatBRL(cents: number): string {
   return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
+
+// Preço de revenda digitado pelo lojista: "399,90", "399.90", "1.299,90" ou "R$ 1299". Devolve centavos,
+// null para campo vazio e undefined para valor inválido.
+export const MAX_RESALE_CENTS = 100_000_000; // R$ 1.000.000,00
+
+export function parseBRLToCents(raw: string): number | null | undefined {
+  let v = raw.replace(/R\$|\s/g, "");
+  if (!v) return null;
+  if (v.includes(",")) v = v.replace(/\./g, "").replace(",", ".");
+  else if (/^\d{1,3}(\.\d{3})+$/.test(v)) v = v.replace(/\./g, "");
+  if (!/^\d+(\.\d{1,2})?$/.test(v)) return undefined;
+  const cents = Math.round(Number(v) * 100);
+  return cents > 0 && cents <= MAX_RESALE_CENTS ? cents : undefined;
+}
+
+// Quanto o preço de revenda fica acima do preço no fornecedor, em %. null se não houver os dois.
+export function markupPercent(resaleCents: number | null, supplierCents: number | null): number | null {
+  if (resaleCents === null || supplierCents === null || supplierCents <= 0) return null;
+  return Math.round(((resaleCents - supplierCents) / supplierCents) * 100);
+}

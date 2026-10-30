@@ -37,12 +37,19 @@ export async function GET(req: Request) {
     return back("erro=Esta+loja+já+está+conectada+a+outra+conta");
   }
 
+  const client = new NuvemshopClient({ storeId: externalStoreId, accessToken: token.access_token });
   let name: string | null = null;
   try {
-    const info = await new NuvemshopClient({ storeId: externalStoreId, accessToken: token.access_token }).getStore();
+    const info = await client.getStore();
     name = info.name?.pt ?? Object.values(info.name ?? {})[0] ?? null;
   } catch {
     // O nome é só para exibição; a conexão vale mesmo sem ele.
+  }
+  try {
+    await client.registerWebhook("app/uninstalled", new URL("/api/nuvemshop/webhook", process.env.APP_URL ?? req.url).toString());
+  } catch (e) {
+    // Reconectar a loja tenta de novo; a importação também detecta token inválido (401).
+    console.error("nuvemshop.webhook_register", (e as Error).message);
   }
 
   const data = {

@@ -22,6 +22,12 @@ describe("MercadoPagoProvider.parseWebhook", () => {
     expect(mp().parseWebhook({ url: "https://app/x?data.id=123456&type=payment", headers: new Headers(), body: "{}" })).toBeNull();
   });
 
+  it("sem x-request-id, a parte request-id sai do manifest", () => {
+    const v1 = createHmac("sha256", "segredo").update("id:123456;ts:1700000000;").digest("hex");
+    const headers = new Headers({ "x-signature": `ts=1700000000,v1=${v1}` });
+    expect(mp().parseWebhook({ url: "https://app/x?data.id=123456&type=payment", headers, body: "{}" })).toBe("123456");
+  });
+
   it("lê o id do corpo quando não vem na URL", () => {
     const headers = signed("777", "req-2");
     const body = JSON.stringify({ type: "payment", data: { id: "777" } });

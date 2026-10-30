@@ -41,6 +41,9 @@ async function sweep() {
     where: { status: "PENDING_PAYMENT", expiresAt: { lt: new Date() } },
     data: { status: "EXPIRED" },
   });
+  // Sessões e autorizações OAuth vencidas não servem para nada e só aumentam o que poderia vazar.
+  await prisma.session.deleteMany({ where: { expiresAt: { lt: new Date() } } });
+  await prisma.oAuthState.deleteMany({ where: { expiresAt: { lt: new Date() } } });
   // Com a fila ainda trabalhando, itens "parados" são só itens esperando a vez.
   const pending = await importQueue().getJobCounts("waiting", "active", "delayed");
   if (pending.waiting + pending.active + pending.delayed > 0) return;

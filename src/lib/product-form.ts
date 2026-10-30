@@ -17,6 +17,13 @@ const base = z.object({
     .trim()
     .transform((v) => (v ? Number(v.replace(",", ".")) : undefined))
     .refine((v) => v === undefined || (Number.isFinite(v) && v >= 0), "Preço sugerido inválido"),
+  // Quanto o lojista paga ao fornecedor: só referência para ele calcular a margem.
+  supplierPrice: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v ? Number(v.replace(",", ".")) : undefined))
+    .refine((v) => v === undefined || (Number.isFinite(v) && v >= 0), "Preço no fornecedor inválido"),
   regulatoryNotes: z.string().trim().optional(),
 });
 

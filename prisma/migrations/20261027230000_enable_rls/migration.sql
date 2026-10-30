@@ -1,0 +1,22 @@
+-- RLS ligado e sem políticas: a API pública do Supabase (chave anônima) não lê nem grava nada.
+-- O app usa a conexão do Prisma, dona das tabelas, que não é afetada. Já estava ativo em produção
+-- (aplicado à mão); esta migration torna a regra reproduzível. Toda tabela nova deve repetir isto.
+ALTER TABLE "Account" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "User" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Session" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Store" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "OAuthState" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "CatalogCategory" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "CatalogProduct" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "CatalogVariant" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "MediaAsset" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Order" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "OrderItem" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Payment" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "PaymentEvent" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "CreditLedgerEntry" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "ImportBatch" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "ImportItem" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "AuditLog" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "CartItem" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "_prisma_migrations" ENABLE ROW LEVEL SECURITY;

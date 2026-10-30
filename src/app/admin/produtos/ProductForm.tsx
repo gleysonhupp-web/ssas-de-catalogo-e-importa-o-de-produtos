@@ -36,7 +36,8 @@ export function ProductForm({ action, categories, initial = {} }: Props) {
             {categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
           </select>
         </label>
-        <label style={{ flex: 1 }}>Preço sugerido (R$)<input name="suggestedPrice" defaultValue={initial.suggestedPrice} inputMode="decimal" /></label>
+        <label style={{ flex: 1 }}>Preço no fornecedor (R$)<input name="supplierPrice" defaultValue={initial.supplierPrice} inputMode="decimal" /></label>
+        <label style={{ flex: 1 }}>Preço sugerido de venda (R$)<input name="suggestedPrice" defaultValue={initial.suggestedPrice} inputMode="decimal" /></label>
       </div>
       <label>
         Variantes <span className="muted small">uma por linha: SKU ; Cor:05|Volume:4ml ; GTIN</span>

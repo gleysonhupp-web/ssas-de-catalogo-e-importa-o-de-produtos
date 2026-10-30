@@ -108,4 +108,29 @@ describe("motor de importação", () => {
     expect(p.payload.published).toBe(false);
     expect(p.payload.variants[0]).toMatchObject({ price: "10.00", stock: 0 });
   });
+
+  it("o preço de revenda definido no carrinho vai para a loja e fica travado no pedido", async () => {
+    const ctx = await merchantWithCart(2);
+    await prisma.store.update({ where: { id: ctx.store.id }, data: { accessTokenEnc: encryptSecret("tok") } });
+    const [withPrice, withoutPrice] = ctx.products;
+    await prisma.cartItem.update({
+      where: { accountId_catalogProductId: { accountId: ctx.account.id, catalogProductId: withPrice.id } },
+      data: { resalePriceCents: 39990 },
+    });
+    const order = await createOrderFromCart(ctx.account.id, ctx.store.id, { ...DEFAULT_SETTINGS, priceMode: "markup", markupPercent: 50 });
+    // Mudar o carrinho depois do checkout não altera o pedido já criado.
+    await prisma.cartItem.updateMany({ where: { accountId: ctx.account.id }, data: { resalePriceCents: 100 } });
+    const outcome = await applyProviderPayment("test", { id: `p-${order.id}`, status: "approved", amountCents: order.totalCents, orderId: order.id });
+    if (outcome.kind !== "released") throw new Error("lote não liberado");
+    const items = await prisma.importItem.findMany({ where: { batchId: outcome.batchId }, include: { product: { include: { variants: true } } } });
+
+    const store = fakeStore();
+    for (const i of items) await processImportItem(i.id, { clientFactory: store.factory });
+    const priceOf = (productId: string) => {
+      const sku = items.find((i) => i.catalogProductId === productId)!.product.variants[0].sku;
+      return store.products.get(sku)!.payload.variants[0].price;
+    };
+    expect(priceOf(withPrice.id)).toBe("399.90");
+    expect(priceOf(withoutPrice.id)).toBe("15.00"); // sem preço próprio: regra do lote (R$ 10 + 50%)
+  });
 });

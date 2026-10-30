@@ -8,6 +8,7 @@ const valid = {
   brand: "Marca X",
   categoryId: "cat1",
   suggestedPrice: "39,90",
+  supplierPrice: "99,90",
   variants: "B142-1 ; Cor:01 Nude\nB142-2 ; Cor:02 Rosé|Volume:4ml ; 7891234567895",
   images: "https://img/a.jpg ; própria ; estúdio",
 };
@@ -19,6 +20,7 @@ describe("parseProductForm", () => {
     if (!r.ok) return;
     expect(r.data.code).toBe("CAT-BEA-000142");
     expect(r.data.suggestedPrice).toBe(39.9);
+    expect(r.data.supplierPrice).toBe(99.9);
     expect(r.data.variants[1]).toEqual({ sku: "B142-2", options: { Cor: "02 Rosé", Volume: "4ml" }, gtin: "7891234567895" });
     expect(r.data.images[0]).toMatchObject({ license: "própria", source: "estúdio" });
   });

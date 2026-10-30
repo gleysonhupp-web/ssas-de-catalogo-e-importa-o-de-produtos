@@ -40,6 +40,9 @@ export interface CartLine {
   brand: string | null;
   image: string | null;
   variants: number;
+  supplierPriceCents: number | null; // preço no fornecedor (referência)
+  suggestedPriceCents: number | null;
+  resalePriceCents: number | null; // preço de venda escolhido pelo lojista
   problem: "unavailable" | "already_imported" | null;
 }
 
@@ -56,15 +59,22 @@ export async function cartLines(accountId: string, storeId?: string): Promise<Ca
     }),
     importedProductIds(storeId),
   ]);
-  return items.map(({ product: p }) => ({
+  return items.map(({ product: p, resalePriceCents }) => ({
     productId: p.id,
     code: p.code,
     name: p.name,
     brand: p.brand,
     image: p.media[0]?.url ?? null,
     variants: p._count.variants,
+    supplierPriceCents: decimalToCents(p.supplierPrice),
+    suggestedPriceCents: decimalToCents(p.suggestedPrice),
+    resalePriceCents,
     problem: p.status !== "APPROVED" ? "unavailable" : imported.has(p.id) ? "already_imported" : null,
   }));
+}
+
+export function decimalToCents(d: Prisma.Decimal | null): number | null {
+  return d === null ? null : Math.round(Number(d) * 100);
 }
 
 export const APPROVED_ONLY: Prisma.CatalogProductWhereInput = { status: "APPROVED" };
