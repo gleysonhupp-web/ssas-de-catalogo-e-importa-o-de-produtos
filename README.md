@@ -1,4 +1,4 @@
-# SaaS de catálogo e importação de produtos (Nuvemshop)
+# LoteOn: catálogo e importação de produtos (Nuvemshop)
 
 O lojista escolhe produtos num catálogo curado, conecta a loja Nuvemshop e paga só pelos produtos que importa
 (R$ 1,25 por produto, variantes inclusas, sem mensalidade).
