@@ -93,3 +93,21 @@ QStash, com throttling por loja, mas cada tarefa fica limitada à duração das 
 Comparação em `PESQUISA_TECNICA_INTEGRACOES.md` §6.3.
 
 **Por que esperar:** envolve custo mensal e não bloqueia o MVP.
+
+## DT-11: Catálogo interno, sem rede de fornecedores (2026-10-30)
+
+**Contexto:** o Business Model Canvas 1.0 da Via Estoque define que o catálogo é preparado e mantido
+pela operação do SaaS e que o serviço vende importação digital, não mercadoria, estoque ou
+logística.
+
+**Decisão:** não criar contas de fornecedor, `SupplierProfile`, painel de fornecedor nem repasses. A
+Fase 2 do roadmap passa a ser "Catálogo curado e piloto". Cada produto ganha "onde comprar
+(referência)" e o registro da autorização do conteúdo.
+
+**Motivo:** o escopo do Canvas e o código atual (catálogo administrado pelo painel interno) já
+coincidem. A rede de fornecedores aumentaria custo e risco regulatório sem ter sido validada.
+
+**Substitui:** a parte de fornecedores de `ARQUITETURA.md` e a antiga Fase 2. DT-09 continua valendo.
+
+**Revisar se:** o piloto mostrar que o lojista precisa principalmente de fornecimento, e não de
+cadastro.

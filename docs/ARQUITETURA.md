@@ -1,5 +1,11 @@
 # Arquitetura proposta
 
+> **Atualização de 2026-10-30 (DT-11):** pelo Business Model Canvas 1.0, o catálogo é preparado e
+> mantido internamente pela Via Estoque. Tudo o que este documento descreve sobre contas de
+> fornecedor (`Account.kind = SUPPLIER`, `SupplierProfile`, painel `/fornecedor`, importação de
+> catálogo pelo fornecedor, visibilidade por fornecedor e repasses) **não é adotado nesta versão**.
+> O restante (lojista, administração, pagamentos, importação para a Nuvemshop) continua valendo.
+
 Este documento mostra como fornecedores, lojistas, administração, pagamentos e integrações se
 encaixam. O princípio é evoluir o que existe, sem reescrever. As escolhas e os motivos estão em
 `DECISOES_TECNICAS.md`, e os fatos de API e preços em `PESQUISA_TECNICA_INTEGRACOES.md`.

@@ -35,21 +35,19 @@ Inclui a parte do MVP que precisa do dono.
 | 1.9c | Fila: decidir entre pg-boss e Redis pago (DT-10); limitador por loja | 👤💰 |
 | 1.10 | **Teste ponta a ponta real:** loja de teste Nuvemshop, pagamento sandbox e importação de 50 produtos (cenários 1, 2 e 3 contra serviços reais) | 1.1, 1.2, 1.4 |
 
-## Fase 2: Rede de fornecedores
+## Fase 2: Catálogo curado e piloto
 
-- `Account.kind`, `Membership` (equipes e convites) e `SupplierProfile` com verificação.
-- Cadastro de fornecedor, que exige aprovação da plataforma para publicar.
-- Painel do fornecedor:
-  - visão geral;
-  - meus produtos;
-  - cadastro individual com upload de imagens (Supabase Storage);
-  - envio para revisão.
-- Assistente de importação CSV/XLSX: mapeamento de colunas, validação por linha, duplicatas, prévia,
-  processamento no worker e relatório. Uma linha inválida não bloqueia as outras.
-- Score de qualidade do cadastro e bloqueio de publicação abaixo do mínimo.
-- Fila de aprovação de fornecedores e produtos no admin.
-- Licença das imagens: declaração obrigatória do fornecedor no cadastro do produto.
-- Testes: isolamento entre fornecedores e o cenário de 2.000 produtos com validação.
+Substitui a antiga "Rede de fornecedores" (ver DT-11). O catálogo é preparado e mantido pela equipe
+da Via Estoque, sem contas de fornecedor.
+
+- Campos no produto: "onde comprar (referência)" (marca ou distribuidor oficial) e a autorização do
+  conteúdo (quem autorizou, quando, por qual meio). Publicação bloqueada sem eles.
+- Checklist de revisão no painel interno antes de mudar o status para Aprovado.
+- Revisão periódica: produto sem revisão há mais de 90 dias aparece numa lista no admin.
+- Página de apresentação com lista de espera e teste de dois preços.
+- Assistente de importação CSV/XLSX do painel interno com validação por linha e prévia (uso da
+  equipe, não de fornecedores).
+- Testes: bloqueio de publicação sem autorização e sem "onde comprar".
 
 ## Fase 3: Experiência do lojista
 
@@ -57,13 +55,13 @@ Inclui a parte do MVP que precisa do dono.
   navegação lateral por perfil.
 - Catálogo:
   - busca com índice (`pg_trgm`);
-  - filtros por fornecedor, marca, preço de fornecimento, país e disponibilidade;
+  - filtros por marca, categoria e disponibilidade;
   - ordenação;
   - favoritos;
   - seleção múltipla.
-- Detalhe do produto com galeria, fornecedor e condições comerciais. A tela separa a taxa de
+- Detalhe do produto com galeria e "onde comprar (referência)". A tela separa a taxa de
   importação do preço da mercadoria.
-- Dashboards reais do lojista, do fornecedor e do admin.
+- Dashboards reais do lojista e do admin.
 - Onboarding guiado: criar conta, conectar loja e escolher os primeiros produtos.
 
 ## Fase 4: Pagamentos e importação em escala
@@ -95,17 +93,18 @@ Inclui a parte do MVP que precisa do dono.
 
 ## Fase 7: Recursos avançados
 
-- Sincronização opcional de estoque e preço de fornecimento, com consentimento por campo.
+- Atualização opcional das fichas já importadas quando o conteúdo da marca mudar, com consentimento
+  do lojista por campo. Estoque e preço continuam com o lojista.
 - IA assistiva: sugestão de título, categoria e atributos faltantes, além de detecção de duplicatas.
   Sempre marcada como sugestão e sempre revisável.
-- Análises para o fornecedor: produtos mais importados e por nicho.
+- Análises internas: produtos mais importados e por nicho, para orientar a curadoria.
 
 ## O que define o MVP pronto
 
 São os critérios do capítulo 27 do briefing. Hoje o núcleo de lojista, cobrança e importação cumpre
 a maior parte em código. Faltam:
 
-- fornecedor com conta própria (Fase 2);
+- catálogo real autorizado e piloto pago (Fase 2);
 - conexão real com a Nuvemshop e checkout em sandbox (Fase 1, 👤);
 - importação real em loja de teste (Fase 1);
 - supervisão administrativa completa (Fases 2 e 4).
