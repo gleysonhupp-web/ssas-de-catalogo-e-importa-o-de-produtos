@@ -84,7 +84,7 @@ export default async function CartPage() {
                   <tr key={l.productId}>
                     <td style={{ width: 56 }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      {l.image && <img src={l.image} alt="" width={48} height={48} style={{ borderRadius: 6, objectFit: "cover" }} />}
+                      {l.image && <img loading="lazy" decoding="async" src={l.image} alt="" width={48} height={48} style={{ borderRadius: 6, objectFit: "cover" }} />}
                     </td>
                     <td>
                       <Link href={`/catalogo/${l.productId}`}>{l.name}</Link>

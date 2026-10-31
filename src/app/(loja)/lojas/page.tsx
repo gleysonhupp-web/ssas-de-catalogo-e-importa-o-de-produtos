@@ -7,8 +7,10 @@ export const dynamic = "force-dynamic";
 export default async function StoresPage({ searchParams }: { searchParams: Promise<{ erro?: string; conectada?: string }> }) {
   const user = await requireUser();
   const { erro, conectada } = await searchParams;
-  const stores = await prisma.store.findMany({ where: { accountId: user.accountId }, orderBy: { connectedAt: "desc" } });
-  const cart = await prisma.cartItem.count({ where: { accountId: user.accountId } });
+  const [stores, cart] = await Promise.all([
+    prisma.store.findMany({ where: { accountId: user.accountId }, orderBy: { connectedAt: "desc" } }),
+    prisma.cartItem.count({ where: { accountId: user.accountId } }),
+  ]);
 
   return (
     <main className="container stack" style={{ maxWidth: 720 }}>

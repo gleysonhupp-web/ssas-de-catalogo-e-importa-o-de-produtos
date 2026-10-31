@@ -347,3 +347,13 @@ textarea { min-height: 100px; }
   .lp-flyer:nth-child(n + 7) { display: none; }
   .lp-mock { transform: rotateY(-8deg) rotateX(6deg); }
 }
+
+/* ---------- Carregamento ---------- */
+.skel { border-radius: 8px; background: linear-gradient(90deg, var(--border) 25%, color-mix(in srgb, var(--border) 50%, var(--surface)) 50%, var(--border) 75%); background-size: 200% 100%; animation: skel 1.2s ease-in-out infinite; }
+.skel-title { height: 32px; width: 220px; }
+.skel-bar { height: 40px; width: 100%; }
+.skel-img { aspect-ratio: 1; width: 100%; }
+.skel-line { height: 14px; width: 100%; }
+.skel-line.short { width: 60%; }
+@keyframes skel { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .skel { animation: none; } }

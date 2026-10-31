@@ -10,20 +10,26 @@ export const dynamic = "force-dynamic";
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product = await prisma.catalogProduct.findFirst({
-    where: { id, status: "APPROVED" },
-    include: { category: true, variants: true, media: { orderBy: { position: "asc" } } },
-  });
+  const [product, user] = await Promise.all([
+    prisma.catalogProduct.findFirst({
+      where: { id, status: "APPROVED" },
+      include: { category: true, variants: true, media: { orderBy: { position: "asc" } } },
+    }),
+    currentUser(),
+  ]);
   if (!product) notFound();
 
-  const user = await currentUser();
   const store = user ? await activeStore(user.accountId) : null;
-  const already = (await importedProductIds(store?.id)).has(product.id);
-  const selected = user
-    ? !!(await prisma.cartItem.findUnique({
-        where: { accountId_catalogProductId: { accountId: user.accountId, catalogProductId: product.id } },
-      }))
-    : false;
+  const [importedIds, cartItem] = await Promise.all([
+    importedProductIds(store?.id),
+    user
+      ? prisma.cartItem.findUnique({
+          where: { accountId_catalogProductId: { accountId: user.accountId, catalogProductId: product.id } },
+        })
+      : null,
+  ]);
+  const already = importedIds.has(product.id);
+  const selected = !!cartItem;
 
   return (
     <main className="container stack">
@@ -32,7 +38,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         <div className="stack" style={{ flex: "1 1 280px", maxWidth: 420 }}>
           {product.media.map((m) => (
             // eslint-disable-next-line @next/next/no-img-element
-            <img key={m.id} src={m.url} alt={m.altText ?? product.name} style={{ borderRadius: 8 }} />
+            <img loading="lazy" decoding="async" key={m.id} src={m.url} alt={m.altText ?? product.name} style={{ borderRadius: 8 }} />
           ))}
         </div>
         <div className="stack" style={{ flex: "2 1 320px" }}>

@@ -60,7 +60,7 @@ export default async function EditProduct({
       </div>
       {product.media[0] && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={product.media[0].url} alt={product.media[0].altText ?? ""} style={{ width: 160, borderRadius: 8 }} />
+        <img loading="lazy" decoding="async" src={product.media[0].url} alt={product.media[0].altText ?? ""} style={{ width: 160, borderRadius: 8 }} />
       )}
       <ProductForm
         action={saveProductAction.bind(null, product.id)}

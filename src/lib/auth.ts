@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { UserRole } from "@prisma/client";
@@ -31,7 +32,8 @@ export async function destroySession(): Promise<void> {
   jar.delete(SESSION_COOKIE);
 }
 
-export async function currentUser() {
+// Uma consulta por requisição: a moldura (menu lateral) e a página compartilham o resultado.
+export const currentUser = cache(async () => {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return null;
   const session = await prisma.session.findUnique({
@@ -40,7 +42,7 @@ export async function currentUser() {
   });
   if (!session || session.expiresAt < new Date()) return null;
   return session.user;
-}
+});
 
 export async function requireUser() {
   const user = await currentUser();

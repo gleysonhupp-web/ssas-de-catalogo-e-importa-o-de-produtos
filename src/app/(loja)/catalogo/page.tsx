@@ -91,7 +91,7 @@ export default async function Catalog({ searchParams }: { searchParams: Promise<
               <Link href={`/catalogo/${p.id}`}>
                 {p.media[0] && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.media[0].url} alt={p.media[0].altText ?? p.name} style={{ aspectRatio: "1", objectFit: "cover", borderRadius: 8, width: "100%" }} />
+                  <img loading="lazy" decoding="async" src={p.media[0].url} alt={p.media[0].altText ?? p.name} style={{ aspectRatio: "1", objectFit: "cover", borderRadius: 8, width: "100%" }} />
                 )}
               </Link>
               <Link href={`/catalogo/${p.id}`} style={{ fontWeight: 600, textDecoration: "none" }}>{p.name}</Link>
