@@ -3,6 +3,8 @@ import { currentUser } from "@/lib/auth";
 import { formatBRL, quote } from "@/lib/pricing";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LandingMotion } from "@/components/LandingMotion";
+import type { CSSProperties } from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +47,25 @@ const AUDIENCE = [
   { title: "Quem revende marcas", text: "Use fichas padronizadas e foque no que importa: preço, estoque e venda." },
 ];
 
+// Peças da ficha de produto que atravessam o topo da página, vindo do fundo e saindo pela frente da tela.
+const FLYING = [
+  { label: "Fotos", dx: -60, dy: -38, delay: 0, dur: 7 },
+  { label: "P · M · G", dx: 30, dy: -45, delay: 1, dur: 7.5 },
+  { label: "Descrição", dx: 38, dy: 40, delay: 2, dur: 6.5 },
+  { label: "R$ 399,90", dx: -48, dy: 36, delay: 3, dur: 7 },
+  { label: "Variações", dx: -20, dy: -55, delay: 4, dur: 8 },
+  { label: "Nuvemshop", dx: 45, dy: -5, delay: 5, dur: 6.5 },
+  { label: "Preto · Branco", dx: -70, dy: 0, delay: 1.6, dur: 8 },
+  { label: "Pronto", dx: 5, dy: 52, delay: 3.6, dur: 6 },
+  { label: "Fotos HD", dx: 55, dy: 30, delay: 5.6, dur: 7.5 },
+  { label: "Tamanhos", dx: -35, dy: -20, delay: 6.4, dur: 7 },
+];
+
+const HEADLINE = "Sua loja cheia de produtos em minutos, não em semanas";
+
+// Atraso de entrada em cascata para itens de uma grade.
+const stagger = (i: number) => ({ "--i": i }) as CSSProperties;
+
 export default async function Home() {
   const user = await currentUser();
   const unit = quote(1).unitPriceCents;
@@ -64,6 +85,7 @@ export default async function Home() {
 
   return (
     <div className="lp">
+      <LandingMotion />
       <div className="lp-ticker" aria-hidden="true">
         <div className="lp-ticker-track">
           {[0, 1].map((k) => (
@@ -92,10 +114,33 @@ export default async function Home() {
 
       <main>
         <section className="lp-hero">
+          <div className="lp-scene" aria-hidden="true">
+            <div className="lp-orb lp-orb-a" />
+            <div className="lp-orb lp-orb-b" />
+            <div className="lp-floor" />
+          </div>
+          <div className="lp-scene lp-scene-front" aria-hidden="true">
+            <div className="lp-flyers">
+              {FLYING.map((f) => (
+                <span
+                  key={f.label}
+                  className="lp-flyer"
+                  style={{ "--dx": `${f.dx}vw`, "--dy": `${f.dy}vh`, animationDelay: `${f.delay}s`, animationDuration: `${f.dur}s` } as CSSProperties}
+                >
+                  <i />
+                  {f.label}
+                </span>
+              ))}
+            </div>
+          </div>
           <div className="lp-wrap lp-hero-grid">
-            <div className="stack">
+            <div className="stack lp-hero-copy">
               <span className="lp-kicker">Catálogo pronto para a sua Nuvemshop</span>
-              <h1 className="lp-h1">Sua loja cheia de produtos em minutos, não em semanas</h1>
+              <h1 className="lp-h1" aria-label={HEADLINE}>
+                {HEADLINE.split(" ").map((w, i) => (
+                  <span key={i} className="lp-word" style={stagger(i)} aria-hidden="true">{w} </span>
+                ))}
+              </h1>
               <p className="lp-lead">
                 Escolha no catálogo, defina seu preço de venda e importe com descrição, fotos e variações. Pague só pelo que importar.
               </p>
@@ -104,7 +149,11 @@ export default async function Home() {
               </p>
               <div className="row">
                 <Link href={start.href} className="btn btn-primary lp-btn-lg">{start.label}</Link>
-                <Link href="/catalogo" className="btn lp-btn-lg">Ver o catálogo</Link>
+                {user ? (
+                  <Link href="/lojas" className="btn lp-btn-lg">Minha loja</Link>
+                ) : (
+                  <Link href="/catalogo" className="btn lp-btn-lg">Ver o catálogo</Link>
+                )}
               </div>
               <ul className="lp-trust">
                 <li>Sem mensalidade</li>
@@ -113,6 +162,7 @@ export default async function Home() {
               </ul>
             </div>
 
+            <div className="lp-stage">
             <div className="lp-mock" aria-label="Exemplo: produto de R$ 99,90 no fornecedor importado por R$ 399,90">
               <div className="lp-mock-card">
                 <span className="lp-mock-label">No fornecedor</span>
@@ -132,20 +182,21 @@ export default async function Home() {
                 <span className="badge badge-ok">Pronto para revisar</span>
               </div>
             </div>
+            </div>
           </div>
         </section>
 
         <section id="precos" className="lp-section">
           <div className="lp-wrap stack">
-            <div className="lp-section-head">
+            <div className="lp-section-head" data-reveal>
               <h2>Pague por produto, sem plano</h2>
               <p className="muted">O preço é o mesmo em qualquer quantidade. Veja alguns exemplos de lote.</p>
             </div>
             <div className="lp-pricing">
-              {PACKS.map((p) => {
+              {PACKS.map((p, i) => {
                 const q = quote(p.quantity);
                 return (
-                  <article key={p.quantity} className="lp-plan">
+                  <article key={p.quantity} className="lp-plan" data-reveal data-tilt style={stagger(i)}>
                     <h3>{p.name}</h3>
                     <p className="small muted">{p.blurb}</p>
                     <p className="lp-plan-qty">{p.quantity} produtos</p>
@@ -167,13 +218,13 @@ export default async function Home() {
 
         <section id="como-funciona" className="lp-section lp-alt">
           <div className="lp-wrap stack">
-            <div className="lp-section-head">
+            <div className="lp-section-head" data-reveal>
               <h2>Como funciona</h2>
               <p className="muted">Três passos entre o catálogo e a sua loja.</p>
             </div>
             <ol className="lp-steps">
               {STEPS.map((s, i) => (
-                <li key={s.title} className="lp-step">
+                <li key={s.title} className="lp-step" data-reveal style={stagger(i)}>
                   <span className="lp-step-n">{i + 1}</span>
                   <h3>{s.title}</h3>
                   <p className="muted">{s.text}</p>
@@ -185,13 +236,13 @@ export default async function Home() {
 
         <section className="lp-section">
           <div className="lp-wrap stack">
-            <div className="lp-section-head">
+            <div className="lp-section-head" data-reveal>
               <h2>Feito para quem vende, não para quem cadastra</h2>
               <p className="muted">O trabalho chato fica com o LoteOn. O preço e a venda ficam com você.</p>
             </div>
             <div className="lp-features">
-              {FEATURES.map((f) => (
-                <div key={f.title} className="lp-feature">
+              {FEATURES.map((f, i) => (
+                <div key={f.title} className="lp-feature" data-reveal data-tilt style={stagger(i)}>
                   <h3>{f.title}</h3>
                   <p className="muted">{f.text}</p>
                 </div>
@@ -202,12 +253,12 @@ export default async function Home() {
 
         <section className="lp-section lp-alt">
           <div className="lp-wrap stack">
-            <div className="lp-section-head">
+            <div className="lp-section-head" data-reveal>
               <h2>Para quem é o LoteOn</h2>
             </div>
             <div className="lp-features lp-three">
-              {AUDIENCE.map((a) => (
-                <div key={a.title} className="lp-feature">
+              {AUDIENCE.map((a, i) => (
+                <div key={a.title} className="lp-feature" data-reveal data-tilt style={stagger(i)}>
                   <h3>{a.title}</h3>
                   <p className="muted">{a.text}</p>
                 </div>
@@ -218,10 +269,10 @@ export default async function Home() {
 
         <section id="perguntas" className="lp-section">
           <div className="lp-wrap stack" style={{ maxWidth: 760 }}>
-            <div className="lp-section-head">
+            <div className="lp-section-head" data-reveal>
               <h2>Perguntas frequentes</h2>
             </div>
-            <div className="lp-faq">
+            <div className="lp-faq" data-reveal>
               {faq.map((f) => (
                 <details key={f.q}>
                   <summary>{f.q}</summary>
@@ -233,7 +284,7 @@ export default async function Home() {
         </section>
 
         <section className="lp-cta">
-          <div className="lp-wrap stack lp-center">
+          <div className="lp-wrap stack lp-center" data-reveal>
             <h2>Sua loja com produtos. Agora.</h2>
             <p>Crie a conta, escolha os produtos e defina seus preços. Você só paga quando for importar.</p>
             <div className="row" style={{ justifyContent: "center" }}>
